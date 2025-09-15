@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Face Detection App</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f8f9fa;
+            text-align: center;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        video {
+            width: 300px;
+            height: 225px;
+            border: 2px solid #444;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+
+        button {
+            margin: 5px;
+            padding: 10px 15px;
+            font-size: 14px;
+            border: none;
+            border-radius: 6px;
+            background: #007bff;
+            color: white;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #0056b3;
+        }
+
+        #results {
+            margin-top: 20px;
+        }
+
+        #annotated {
+            max-width: 400px;
+            border: 2px solid #28a745;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .faces {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .faces img {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border: 2px solid #ffc107;
+            border-radius: 6px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Face Detection App</h1>
+
+    <video id="camera" autoplay playsinline></video><br>
+    <button onclick="capture()">Capture</button>
+    <button onclick="switchCamera()">Switch Camera</button>
+
+    <div id="results">
+        <h2>Annotated Image</h2>
+        <img id="annotated" src="" alt="Annotated result will appear here">
+        <h2>Extracted Faces</h2>
+        <div class="faces" id="faces"></div>
+    </div>
+
+    <canvas id="canvas" style="display:none;"></canvas>
+
+    <script>
+        let currentStream;
+        let useFrontCamera = true;
+        const video = document.getElementById("camera");
+        const canvas = document.getElementById("canvas");
+        const annotatedImg = document.getElementById("annotated");
+        const facesDiv = document.getElementById("faces");
+
+        async function startCamera() {
+            if (currentStream) {
+                currentStream.getTracks().forEach(track => track.stop());
+            }
+            const constraints = {
+                video: { facingMode: useFrontCamera ? "user" : "environment" }
+            };
+            try {
+                currentStream = await navigator.mediaDevices.getUserMedia(constraints);
+                video.srcObject = currentStream;
+            } catch (err) {
+                alert("Camera access denied: " + err);
+            }
+        }
+
+        function switchCamera() {
+            useFrontCamera = !useFrontCamera;
+            startCamera();
+        }
+
+        async function capture() {
+            const ctx = canvas.getContext("2d");
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            canvas.toBlob(async function (blob) {
+                let formData = new FormData();
+                formData.append("file", blob, "capture.png");
+
+                const response = await fetch("/detect-faces", {
+                    method: "POST",
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (result.annotated) {
+                    annotatedImg.src = "data:image/png;base64," + result.annotated;
+                }
+
+                facesDiv.innerHTML = "";
+                result.faces.forEach(faceB64 => {
+                    let img = document.createElement("img");
+                    img.src = "data:image/png;base64," + faceB64;
+                    facesDiv.appendChild(img);
+                });
+            }, "image/png");
+        }
+
+        // Start the camera on load
+        startCamera();
+    </script>
+</body>
+
+</html>
