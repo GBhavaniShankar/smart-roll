@@ -5,7 +5,6 @@ import os
 
 class HaarDetector:
     def __init__(self):
-        # Load from OpenCV's built-in haarcascades directory
         model_path = os.path.join(cv2.data.haarcascades, "haarcascade_frontalface_default.xml")
         if not os.path.exists(model_path):
             raise FileNotFoundError(f"Haar model not found at {model_path}")
