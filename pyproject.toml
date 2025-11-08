@@ -6,9 +6,12 @@ readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
     "fastapi>=0.116.1",
+    "insightface>=0.7.3",
     "mtcnn>=1.0.0",
     "numpy>=2.2.6",
+    "onnxruntime>=1.23.2",
     "opencv-python>=4.12.0.88",
+    "pillow>=12.0.0",
     "psycopg2-binary>=2.9.11",
     "pydantic>=2.11.9",
     "sqlalchemy>=2.0.44",

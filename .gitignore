@@ -207,3 +207,6 @@ marimo/_lsp/
 __marimo__/
 
 *.pem
+\n+# Project-specific data we do NOT want in version control (private student images & raw class photos)
+students/
+org_images/
