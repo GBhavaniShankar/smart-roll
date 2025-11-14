@@ -14,7 +14,9 @@ from app.models.student import (
 )
 from app.models.course import EnrollmentCreate, CourseInDB
 from app.models.attendance import CourseAttendanceSummary, CourseAttendanceDetail
-from app.services.recommendation_service import RecommendationService
+from app.services.recommendation_service import (
+    RecommendationService, StudentHistoryRequest, CompletedCourse
+)
 
 router = APIRouter(
     prefix="/api/student",
@@ -120,12 +122,10 @@ async def get_current_courses(
     db: Client = Depends(get_db)
 ):
     try:
-        # [FIX] Call the new SQL function
         response = db.rpc(
             'get_student_current_courses',
             {'s_id': str(current_user.user_id)}
         ).execute()
-        
         return response.data
     except Exception as e:
         _print_error(e)
@@ -137,12 +137,10 @@ async def get_overall_attendance(
     db: Client = Depends(get_db)
 ):
     try:
-        # [FIX] Call the new SQL function
         response = db.rpc(
             'get_student_current_attendance',
             {'s_id': str(current_user.user_id)}
         ).execute()
-        
         return response.data
     except Exception as e:
         _print_error(e)
@@ -169,8 +167,9 @@ async def get_available_courses_with_recommendations(
     db: Client = Depends(get_db)
 ):
     """
-    Gets available course *offerings* for the student's current semester,
-    based on the single active registration period.
+    1. Builds the student's full history.
+    2. Calls the ML API *once* to get all scores.
+    3. Finds available offerings and enriches them with the scores.
     """
     try:
         # 1. Get Student's profile
@@ -180,7 +179,39 @@ async def get_available_courses_with_recommendations(
         
         student_profile = student_resp.data
         
-        # 2. Call the SQL function to get available offerings
+        # 2. Get Student's *full* academic history
+        history_resp = db.rpc(
+            'get_student_course_history', 
+            {'s_id': str(current_user.user_id)}
+        ).execute()
+
+        completed_courses_list = []
+        if history_resp.data:
+            for course in history_resp.data:
+                completed_courses_list.append(
+                    CompletedCourse(
+                        course_id=course['course_code'],
+                        domain=course['domain'],
+                        grade_points=course['grade_point'],
+                        semester_taken=course['logical_semester'], # This can now be None
+                        attendance_percentage=int(course['attendance_percentage'])
+                    )
+                )
+
+        # 3. Build the single request object for the ML API
+        student_data_blob = StudentHistoryRequest(
+            student_id=str(current_user.user_id),
+            stream=student_profile['stream'],
+            current_semester=student_profile['current_semester'],
+            cgpa_at_time_x=float(student_profile['cgpa']),
+            completed_course_history_up_to_x=completed_courses_list
+        )
+
+        # 4. Call the ML API *ONCE*
+        reco_service = RecommendationService(db)
+        scored_courses_dict = await reco_service.get_recommendation_scores(student_data_blob)
+        
+        # 5. Get available offerings from the database
         offerings_resp = db.rpc(
             'get_available_offerings_for_student',
             {'s_id': str(current_user.user_id)}
@@ -190,32 +221,29 @@ async def get_available_courses_with_recommendations(
             return []
             
         available_offerings = offerings_resp.data
-        
-        # 3. Recommendation logic
-        reco_service = RecommendationService(db)
-        abstract_courses_to_score = [offering['course'] for offering in available_offerings]
-        
-        scored_courses_dict = await reco_service.get_recommendations_for_student(
-            student_id=current_user.user_id,
-            student_profile=student_profile,
-            available_courses=abstract_courses_to_score
-        )
-        
-        # 4. Enrich the offerings with the scores
+
+        # 6. Enrich the offerings with the scores
         enriched_offerings = []
         for offering in available_offerings:
-            abstract_course_id = offering['course']['course_id']
-            score_data = scored_courses_dict.get(abstract_course_id, {})
+            course_code = offering['course']['course_code']
+            
+            # Get the score from the dict, or use a default
+            score_data = scored_courses_dict.get(course_code, {
+                "score": 50.0,
+                "relative_score": 0.5,
+                "reason": "N/A (default score)"
+            })
             
             enriched_offerings.append({
                 "offering_id": offering['offering_id'],
                 "course_name": offering['course']['course_name'],
-                "course_code": offering['course']['course_code'],
+                "course_code": course_code,
                 "credits": offering['course']['credits'],
                 "domain": offering['course']['domain'],
                 "semester": offering['course']['logical_semester'],
-                "recommendation_score": score_data.get('recommendation_score'),
-                "reasoning": score_data.get('reasoning')
+                "recommendation_score": score_data.get('score'),
+                "relative_score": score_data.get('relative_score'),
+                "reasoning": score_data.get('reason', 'N/A')
             })
 
         return enriched_offerings
@@ -288,9 +316,10 @@ async def enroll_in_course(
     except Exception as e:
         _print_error(e)
         raise HTTPException(status_code=500, detail=str(e))
-    
-# ... (at the very end of student.py)
 
+#
+# --- [THIS IS THE NEW, MISSING FUNCTION] ---
+#
 @router.get("/semesters/list", response_model=List[dict])
 async def get_all_semesters_list_for_student(
     current_user: UserInDB = StudentUser,
