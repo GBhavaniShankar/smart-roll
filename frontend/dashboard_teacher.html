@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teacher Dashboard - TechNova</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.4);
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 10% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 600px;
+            border-radius: 12px;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .close-btn {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="dashboard-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>TechNova</h2>
+            </div>
+            <nav class="sidebar-nav">
+                <ul>
+                    <li><a href="#" class="active" data-page="my-offerings">My Offerings</a></li>
+                    <li><a href="#" data-page="create-offering">Create Offering</a></li>
+                    <li><a href="#" data-page="catalog">Course Catalog</a></li>
+                </ul>
+            </nav>
+            <div class="sidebar-footer"><button id="logout-button" class="btn">Logout</button></div>
+        </aside>
+
+        <main class="main-content">
+            <header class="header">
+                <h1 id="header-title">My Offerings</h1>
+                <div class="user-profile">
+                    Welcome, <span id="user-full-name">Teacher</span>
+                </div>
+            </header>
+
+            <div id="status-message" class="hidden" style="padding: 1rem; margin-bottom: 1rem; border-radius: 8px;">
+            </div>
+
+            <section id="page-my-offerings" class="page-content">
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <h3>Your Course Offerings</h3>
+                        <div class="form-group" style="margin-bottom: 1rem;">
+                            <label for="offering-filter" style="margin-right: 10px;">Show:</label>
+                            <select id="offering-filter" style="width: 200px; padding: 0.5rem;">
+                                <option value="current">Current Offerings</option>
+                                <option value="all">All Offerings</option>
+                            </select>
+                        </div>
+                    </div>
+                    <p>This is a list of all courses you are teaching or have taught in the past.</p>
+                    <div id="my-offerings-container" class="card-grid">
+                    </div>
+                </div>
+            </section>
+
+            <section id="page-create-offering" class="page-content hidden">
+                <div class="card">
+                    <h3>Offer an Existing Course</h3>
+                    <p>Select a course from the catalog. It will be offered for the **currently active** registration
+                        period.</p>
+                    <form id="create-offering-form" class="dashboard-form">
+
+                        <div class="form-group">
+                            <label for="offering-semester-select">Select Active Semester</label>
+                            <select id="offering-semester-select" required>
+                                <option value="">-- Loading active semesters --</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="course-catalog-select">Select Course from Catalog</label>
+                            <select id="course-catalog-select" required>
+                                <option value="">-- Loading courses --</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="offering-logical-semester">Logical Semester (1-8)</label>
+                            <input type="number" id="offering-logical-semester" min="1" max="8"
+                                placeholder="e.g., 3 for a 3rd sem course, or blank">
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">Create Offering</button>
+                    </form>
+                </div>
+            </section>
+
+            <section id="page-catalog" class="page-content hidden">
+                <div class="card">
+                    <h3>Create New Course (in Catalog)</h3>
+                    <p>This adds a new *abstract course* to the university catalog.</p>
+                    <form id="create-course-form" class="dashboard-form">
+                        <div class="form-group"><label for="course-name">Course Name</label><input type="text"
+                                id="course-name" required></div>
+                        <div class="form-group"><label for="course-code">Course Code</label><input type="text"
+                                id="course-code" required></div>
+                        <div class="form-group"><label for="course-stream">Stream</label>
+                            <select id="course-stream">
+                                <option value="CSE">CSE</option>
+                                <option value="DSE">DSE</option>
+                                <option value="EE">EE</option>
+                                <option value="COMMON">COMMON</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="course-domain">Domain</label>
+                            <select id="course-domain" required>
+                                <option value="">-- Select a stream first --</option>
+                            </select>
+                        </div>
+                        <div class="form-group"><label for="course-credits">Credits</label><input type="number"
+                                id="course-credits" min="1" max="8" required></div>
+
+                        <div class="form-group">
+                            <label for="course-logical-semester">Logical Semester (1-8)</label>
+                            <input type.number" id="course-logical-semester" min="1" max="8"
+                                placeholder="e.g., 3, or blank for Universal Elective">
+                        </div>
+
+                        <div class="form-group"><label for="course-category">Category</label>
+                            <select id="course-category">
+                                <option value="core">Core</option>
+                                <option value="professional_elective">Professional Elective</option>
+                                <option value="open_elective">Open Elective</option>
+                                <option value="minor">Minor</option>
+                            </select>
+                        </div>
+                        <div class="form-group"><label for="course-difficulty">Difficulty (1-10)</label><input
+                                type="number" id="course-difficulty" min="1" max="10" value="5" required></div>
+                        <div class="form-group"><label for="course-desc">Description</label><textarea id="course-desc"
+                                rows="3"></textarea></div>
+                        <button type="submit" class="btn btn-primary">Create Course in Catalog</button>
+                    </form>
+                </div>
+
+                <div class="card" style="margin-top: 1.5rem;">
+                    <h3>Manage Prerequisites</h3>
+                    <p>Add a prerequisite to an existing course in the catalog.</p>
+                    <form id="prereq-form" class="dashboard-form">
+                        <div class="form-group">
+                            <label for="prereq-course-select">Select Course (e.g., Algorithms)</label>
+                            <select id="prereq-course-select" required>
+                                <option value="">-- Loading courses --</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="prereq-select">Select Prerequisite (e.g., Data Structures)</label>
+                            <select id="prereq-select" required>
+                                <option value="">-- Loading courses --</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="display: flex; align-items: center;">
+                            <input type="checkbox" id="prereq-mandatory" checked
+                                style="width: auto; margin-right: 10px;">
+                            <label for="prereq-mandatory">Is Mandatory</label>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Add Prerequisite</button>
+                    </form>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <div id="teacher-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-title">Modal Title</h3>
+                <span class="close-btn">&times;</span>
+            </div>
+            <div id="modal-body">
+            </div>
+        </div>
+    </div>
+
+    <script src="js/main.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/teacher.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TA Dashboard - TechNova</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+    <div class="dashboard-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>TechNova</h2>
+            </div>
+            <nav class="sidebar-nav">
+                <ul>
+                    <li><a href="#" class="active" data-page="courses">Assigned Offerings</a></li>
+                    <li><a href="#" data-page="mark-attendance">Mark Attendance</a></li>
+                    <li><a href="#" data-page="fix-attendance">Fix Attendance</a></li>
+                </ul>
+            </nav>
+            <div class="sidebar-footer"><button id="logout-button" class="btn">Logout</button></div>
+        </aside>
+
+        <main class="main-content">
+            <header class="header">
+                <h1 id="header-title">Assigned Offerings</h1>
+                <div class="user-profile">
+                    Welcome, <span id="user-full-name">TA</span>
+                </div>
+            </header>
+
+            <div id="status-message" class="hidden" style="padding: 1rem; margin-bottom: 1rem; border-radius: 8px;">
+            </div>
+
+            <section id="page-courses" class="page-content">
+                <div class="card">
+                    <h3>Your Assigned Course Offerings</h3>
+                    <div id="assigned-courses-container">
+                    </div>
+                </div>
+                <div class="card" style="margin-top: 1.5rem;">
+                    <h3>Student Roster</h3>
+                    <div id="roster-container">
+                        <p>Click "View Roster" on an offering to see enrolled students.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="page-mark-attendance" class="page-content hidden">
+                <div class="card">
+                    <h3>Mark Attendance with CV</h3>
+                    <p>Select a course offering and upload the class photo. The CV API will process it and mark
+                        attendance for today.</p>
+                    <form id="mark-attendance-form" class="dashboard-form">
+                        <div class="form-group">
+                            <label for="ta-course-select">Select Course Offering</label>
+                            <select id="ta-course-select" required>
+                                <option value="">-- Loading offerings --</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="class-photo">Upload Class Photo</label>
+                            <input type="file" id="class-photo" accept="image/jpeg,image/png" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Mark Attendance</button>
+                    </form>
+
+                    <div id="attendance-results-container" style="margin-top: 1.5rem; display: none;">
+                        <hr>
+                        <h4>Attendance Results</h4>
+                        <div id="attendance-metrics"
+                            style="padding: 10px; background-color: #f8f9fa; border-radius: 8px;"></div>
+
+                        <div id="unknown-faces-container" style="margin-top: 1rem; display: none;">
+                            <h5>Unrecognized Faces:</h5>
+                            <div id="unknown-faces-grid" style="display: flex; flex-wrap: wrap; gap: 10px;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="page-fix-attendance" class="page-content hidden">
+                <div class="card">
+                    <h3>Manually Fix Attendance</h3>
+                    <p>Override or manually set attendance for a student on a specific date.</p>
+                    <form id="fix-attendance-form" class="dashboard-form">
+                        <div class="form-group">
+                            <label for="fix-course-select">Select Course Offering</label>
+                            <select id="fix-course-select" required>
+                                <option value="">-- Loading offerings --</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="fix-student-select">Select Student</label>
+                            <select id="fix-student-select" required>
+                                <option value="">-- Select a course first --</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="fix-date">Date</label>
+                            <input type="date" id="fix-date" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="fix-status">Status</label>
+                            <select id="fix-status">
+                                <option value="present">Present</option>
+                                <option value="absent">Absent</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Update Record</button>
+                    </form>
+                </div>
+            </section>
+
+        </main>
+    </div>
+    <script src="js/main.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/ta.js"></script>
+</body>
+
+</html>

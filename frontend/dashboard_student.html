@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Dashboard - TechNova</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+</head>
+
+<body>
+
+    <div class="dashboard-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>TechNova</h2>
+            </div>
+            <nav class="sidebar-nav" role="navigation">
+                <ul>
+                    <li><a href="#" class="nav-link active">Dashboard</a></li>
+                    <li><a href="#" class="nav-link">My Courses</a></li>
+                    <li><a href="#" class="nav-link">Enroll</a></li>
+                    <li><a href="#" class="nav-link">Grades</a></li>
+                    <li><a href="#" class="nav-link">Profile</a></li>
+                </ul>
+            </nav>
+            <div class="sidebar-footer">
+                <button id="logout-button" class="btn">Logout</button>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="header">
+                <h1>Student Dashboard</h1>
+                <div class="user-profile">
+                    Welcome, <span id="user-full-name">...</span>
+                </div>
+            </header>
+
+            <section id="dashboard-content">
+                <div class="card" id="profile-widget-container">
+                </div>
+
+                <div class="card-grid" style="margin-top: 1.5rem;">
+
+                    <div class="card">
+                        <h3>Current Courses</h3>
+                        <div id="current-courses-container">
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3>Current Attendance</h3>
+                        <div id="attendance-container">
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 1.5rem;">
+                    <div class="card">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <h3>Course History (Completed)</h3>
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label for="semester-filter" style="margin-right: 10px;">Filter by Semester:</label>
+                                <select id="semester-filter" style="width: 150px; padding: 0.5rem;">
+                                    <option value="">All Semesters</option>
+                                    <option value="1">Semester 1</option>
+                                    <option value="2">Semester 2</option>
+                                    <option value="3">Semester 3</option>
+                                    <option value="4">Semester 4</option>
+                                    <option value="5">Semester 5</option>
+                                    <option value="6">Semester 6</option>
+                                    <option value="7">Semester 7</option>
+                                    <option value="8">Semester 8</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div id="gpa-display-container"
+                            style="padding: 1rem; background-color: #f8f9fa; border-radius: 8px; margin-bottom: 1rem;">
+                        </div>
+                        <div id="grades-container">
+                        </div>
+                    </div>
+
+                    <div class="card" style="margin-top: 1.5rem;">
+                        <h3>Available Courses for Enrollment</h3>
+                        <div id="recommendations-container">
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="js/main.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/student.js"></script>
+</body>
+
+</html>
