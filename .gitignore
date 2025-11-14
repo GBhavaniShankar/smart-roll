@@ -207,6 +207,14 @@ marimo/_lsp/
 __marimo__/
 
 *.pem
-\n+# Project-specific data we do NOT want in version control (private student images & raw class photos)
+# Project-specific data we do NOT want in version control (private student images & raw class photos)
 students/
 org_images/
+
+# Model training & evaluation artifacts to exclude
+models/wandb/
+models/build_enrollment.py
+models/champion.json
+models/students_metadata.json
+models/students/validation_data/
+models/model_server.py
